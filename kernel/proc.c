@@ -58,6 +58,22 @@ procinit(void)
   }
 }
 
+//lab2.2:count the number of used proc
+uint64
+cntproc(void){
+  struct proc *p;
+  uint64 cnt=0;
+
+  for(p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+      if(p->state != UNUSED){
+        cnt++;
+      }
+    release(&p->lock);
+  }
+  return cnt;
+}
+
 // Must be called with interrupts disabled,
 // to prevent race with process being moved
 // to a different CPU.
