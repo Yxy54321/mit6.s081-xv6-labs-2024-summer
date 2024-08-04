@@ -69,12 +69,41 @@ sys_sleep(void)
   return 0;
 }
 
-
 #ifdef LAB_PGTBL
 int
 sys_pgaccess(void)
 {
-  // lab pgtbl: your code here.
+  // lab3.3 pgtbl: your code here.
+  uint64 va ;
+  int n;
+  unsigned int bitmask=0;
+  uint64 opt;
+  struct proc* p=myproc(); 
+
+  argaddr(0, &va);
+  argint(1, &n);
+  argaddr(2,&opt);
+  pte_t* pte;
+
+  int  i=0;
+
+  for(;i<n;i++){
+    pte = walk(p->pagetable,va,0);
+    if(pte != 0){
+      if(*pte & PTE_A){
+        bitmask = bitmask | (1U << i);
+        *pte = (*pte & (~PTE_A));
+      }
+    }
+    else{
+      printf("%p exceed aviliable va range,only legal pages are considered\n",va);
+      break;
+    }
+    va = va+PGSIZE;
+  }
+  if(copyout(p->pagetable, opt, (char *) &bitmask, sizeof(bitmask)) < 0){
+    return -1;
+  }
   return 0;
 }
 #endif
