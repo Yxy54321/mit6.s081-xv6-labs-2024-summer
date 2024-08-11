@@ -77,8 +77,20 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2){
+  //lab4.3
+
+    if(p->interval!=0){
+      p->ticks= (p->ticks+1)%p->interval;
+      if(p->ticks==0 && p->flag==0){
+        p->almctx=*(p->trapframe);
+        p->trapframe->epc = p->handler; 
+        p->flag=1;
+      }
+    }
+
     yield();
+  }
 
   usertrapret();
 }
@@ -153,6 +165,9 @@ kerneltrap()
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
     yield();
+
+  
+
 
   // the yield() may have caused some traps to occur,
   // so restore trap registers for use by kernelvec.S's sepc instruction.

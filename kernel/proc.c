@@ -118,6 +118,9 @@ allocproc(void)
     } else {
       release(&p->lock);
     }
+    p->handler=0;
+    p->ticks=0;
+    p->interval=0;
   }
   return 0;
 

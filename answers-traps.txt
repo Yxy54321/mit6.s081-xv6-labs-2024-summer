@@ -1,0 +1,12 @@
+1:参数13在a2寄存器
+
+2:没有显示的调用代码，g被内联到main中，f又被内联至g中
+
+At what address is the function printf located?
+
+
+3.jalr行对应的pc+4的值，指示return addr
+
+4.i的值应该按字节分开后倒序，0x726c6400；不需要修改57616.
+
+5.y的输出为当前a2寄存器的值，由于没有给第二个参数，所以是随机的。
