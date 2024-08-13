@@ -26,6 +26,10 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+//lab 10
+void *mmap(void *addr, size_t len, int prot, int flags,int fd, off_t offset);
+int munmap(void *addr, size_t len);
+
 #ifdef LAB_NET
 int connect(uint32, uint16, uint16);
 #endif

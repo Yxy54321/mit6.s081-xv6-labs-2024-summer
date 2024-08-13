@@ -79,6 +79,20 @@ struct trapframe {
   /* 280 */ uint64 t6;
 };
 
+//lab 10
+#define NVMA 16
+
+struct vma {
+  int used;           // 是否已被使用
+  uint64 addr;        // 起始地址
+  int len;            // 长度
+  int prot;           // rd wt ex
+  int flags;          // 标志位
+  int vfd;            // 对应的文件描述符
+  struct file* vfile; // 对应文件
+  int offset;         // 文件偏移，本实验中一直为0
+};
+
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
@@ -104,4 +118,5 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  struct vma vma[NVMA];    // 16个vma
 };
