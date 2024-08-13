@@ -21,13 +21,64 @@ struct run {
 struct {
   struct spinlock lock;
   struct run *freelist;
+  int pagenums;
+  char* ref_pages;
+  char *ends;
 } kmem;
+
+void get_pagenums(void *pa_start, void *pa_end)
+{
+  char *p;
+  p = (char*)PGROUNDUP((uint64)pa_start);
+  for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
+  {
+    kmem.pagenums++;  //引用计数
+  }
+}
 
 void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  freerange(end, (void*)PHYSTOP);
+  
+  get_pagenums(end, (void*)PHYSTOP);
+  kmem.ref_pages=end;
+  for (int i = 0; i < kmem.pagenums; i++)
+  {
+    kmem.ref_pages[i]=0;
+  }
+  kmem.ends=kmem.ref_pages+kmem.pagenums;
+
+  freerange(kmem.ends, (void*)PHYSTOP);
+  //printf("pagenums=%d\n",kmem.pagenums);
+}
+
+int page_index(uint64 pa)
+{
+  pa=PGROUNDDOWN(pa);
+  int ans=(pa-(uint64)kmem.ends)/PGSIZE;
+  if(ans<0 || ans>kmem.pagenums)
+  {
+    printf("ans: %d, pa: %p, kmem.ends : %p",ans,pa,kmem.ends);
+    panic("page_index failed!\n");
+  }
+  return ans;
+}
+
+void increase(void *pa)
+{
+  int index=page_index((uint64)pa);
+  acquire(&kmem.lock);
+  kmem.ref_pages[index]++;
+  release(&kmem.lock);
+}
+
+void decrese(void *pa)
+{
+  int index=page_index((uint64)pa);
+  acquire(&kmem.lock);
+  kmem.ref_pages[index]--;
+  release(&kmem.lock);
 }
 
 void
@@ -36,7 +87,10 @@ freerange(void *pa_start, void *pa_end)
   char *p;
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
+  {
     kfree(p);
+  }
+    
 }
 
 // Free the page of physical memory pointed at by pa,
@@ -46,6 +100,17 @@ freerange(void *pa_start, void *pa_end)
 void
 kfree(void *pa)
 {
+  int index = page_index((uint64)pa);
+  if(kmem.ref_pages[index]>1)
+  {
+    decrese(pa);
+    return ;
+  }
+  if(kmem.ref_pages[index]==1)
+  {
+    decrese(pa);
+  }
+
   struct run *r;
 
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
@@ -77,6 +142,10 @@ kalloc(void)
   release(&kmem.lock);
 
   if(r)
+  {
     memset((char*)r, 5, PGSIZE); // fill with junk
+    increase(r);
+  }
+  
   return (void*)r;
 }
