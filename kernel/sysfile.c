@@ -304,6 +304,7 @@ create(char *path, short type, short major, short minor)
 uint64
 sys_open(void)
 {
+  
   char path[MAXPATH];
   int fd, omode;
   struct file *f;
@@ -311,8 +312,11 @@ sys_open(void)
   int n;
 
   argint(1, &omode);
-  if((n = argstr(0, path, MAXPATH)) < 0)
+  
+  if((n = argstr(0, path, MAXPATH)) < 0){
+    printf("1\n");
     return -1;
+  }
 
   begin_op();
 
@@ -320,33 +324,36 @@ sys_open(void)
     ip = create(path, T_FILE, 0, 0);
     if(ip == 0){
       end_op();
+      printf("2\n");
       return -1;
     }
   } else {
     if((ip = namei(path)) == 0){
       end_op();
+      printf("%s\n",path);
       return -1;
     }
     ilock(ip);
     if(ip->type == T_DIR && omode != O_RDONLY){
       iunlockput(ip);
       end_op();
+      printf("5\n");
       return -1;
     }
   }
 
   if(ip->type == T_SYMLINK && !(omode & O_NOFOLLOW)){
     int depth = 10;
-    while(true){
+    for(int i=0;i<depth;i++){
+      // printf("1\n");
       if(readi(ip,0,(uint64)path,0,MAXPATH)!=MAXPATH){
         iunlockput(ip);
         end_op();
         return -1;
       }
-
       iunlockput(ip);
 
-      if((ip=iname(path))==0){
+      if((ip=namei(path))==0){
         end_op();
         return -1;
       }
@@ -533,21 +540,22 @@ sys_pipe(void)
 }
 
 //lab 9
+uint64
 sys_symlink(void){
   char source[MAXPATH],destination[MAXPATH];
   struct inode* ip;
 
-  if(argstr(0,source,MAXPATH)<0 || argstr(0,destination,MAXPATH)<0){
-    return -1;
-  }
+  argstr(0,source,MAXPATH);
+  argstr(1,destination,MAXPATH);
+   
 
   begin_op();
   if((ip = create(destination,T_SYMLINK,0,0))==0){
-    end_pop();
+    end_op();
     return -1;
   }
 
-  if(writei(ip,0,(uint64)source,0,MAXPATH)){
+  if(writei(ip,0,(uint64)source,0,MAXPATH) != MAXPATH){
     iunlockput(ip);
     end_op();
     return -1;

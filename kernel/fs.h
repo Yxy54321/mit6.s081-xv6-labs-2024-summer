@@ -30,6 +30,7 @@ struct superblock {
 #define NDINDIRECT NINDIRECT*NINDIRECT
 #define MAXFILE (NDIRECT + NINDIRECT + NDINDIRECT)
 
+
 // On-disk inode structure
 struct dinode {
   short type;           // File type
