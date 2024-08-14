@@ -472,7 +472,7 @@ itrunc(struct inode *ip)
     bfree(ip->dev, ip->addrs[NDIRECT]);
     ip->addrs[NDIRECT] = 0;
   }
-
+//lab9.1
   if(ip->addrs[NDIRECT+1]){
     bp = bread(ip->dev,ip->addrs[NDIRECT+1]);
     a = (uint*)bp->data;

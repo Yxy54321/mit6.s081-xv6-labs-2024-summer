@@ -341,7 +341,7 @@ sys_open(void)
       return -1;
     }
   }
-
+//lab
   if(ip->type == T_SYMLINK && !(omode & O_NOFOLLOW)){
     int depth = 10;
     for(int i=0;i<depth;i++){
@@ -369,7 +369,7 @@ sys_open(void)
       }
     }
   }
-
+//lab
   if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
     iunlockput(ip);
     end_op();
